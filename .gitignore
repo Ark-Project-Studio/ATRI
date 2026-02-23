@@ -39,3 +39,54 @@
 
 # debug information files
 *.dwo
+
+# 1. VS 用户特定文件
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# 2. 构建输出目录
+bin/
+obj/
+[Bb]uild/
+[Bb]in/
+[Oo]bj/
+out/
+build/
+dist/
+
+# 3. VS 临时文件和备份
+*.tmp
+*.temp
+*.log
+*.tlog
+*.ilk
+*.pdb
+*.ipdb
+*.iobj
+
+# 4. VS 缓存文件
+*.cache
+*.sdf
+*.opensdf
+*.opendb
+*.VC.db
+*.VC.VC.opendb
+
+# 5. 发布配置
+*.pubxml
+*.publishproj
+PublishProfiles/
+
+# 6. 打包文件
+*.nupkg
+*.zip
+*.7z
+
+# 7. 测试结果
+TestResults/
+*.trx
+.coverage
+*.coverage
