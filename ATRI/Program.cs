@@ -11,6 +11,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using ATRI.dot_raknet.Network;
+using ATRI.Global;
 using ATRI.https;
 using ATRI.XBOX;
 using Org.BouncyCastle.Crypto;
@@ -32,7 +33,13 @@ namespace ATRI
 		public static string Token = string.Empty;
 		static void Main(string[] args)
 		{
+			
 			XBOXService.StartLoginEach().Wait();
+			if (XBOXService.Users.Count == 0)
+			{
+				XBOXService.AddUser().Wait();
+			}
+			
 			foreach (var user in XBOXService.Users)
 			{
 				var result = XBOXService.XboxLive(user.Value).Result;

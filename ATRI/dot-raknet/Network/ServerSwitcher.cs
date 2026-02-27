@@ -11,6 +11,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using ATRI.Global;
 using fNbt;
 using Jose;
 using Org.BouncyCastle.Crypto.Agreement;
@@ -36,10 +37,11 @@ namespace ATRI.dot_raknet.Network
 {
 	public class ServerSwitcher
 	{
+		
 		private RaknetClient? Serversession  = null;
 		public delegate void PacketReceive(Packet pk);
 		public PacketReceive OnPacketReceive = delegate { };
-		public PacketReceive OnCallStartGame = delegate { };
+		public PacketReceive OnCallPacket = delegate { };
 		public delegate void ServerChange();
 		public ServerState State { get; set; }
 		public ServerChange OnServerChange = delegate { };
@@ -53,9 +55,9 @@ namespace ATRI.dot_raknet.Network
 
 		public void CallPacket(Packet pk)
 		{
-			
-				SendPacket(pk, true);
+			SendPacket(pk, true);
 		}
+		
 		public void Switch(IPEndPoint end)
 		{
 			using (changeLock.EnterScope())
@@ -92,8 +94,6 @@ namespace ATRI.dot_raknet.Network
 			{
 				mcpeWrapper.payload = CryptoUtils.Decrypt(mcpeWrapper.payload, CryptoContext);
 			}
-
-			
 
 			if (EnableCompression)
 			{
@@ -149,6 +149,16 @@ namespace ATRI.dot_raknet.Network
 				case McbeServerToClientHandshake p:
 					p.Decode(p.Bytes);
 					HandleServerToClientHandShake(p);
+					break;
+			    case McbeSetPlayerGameType p:
+					p.Decode(p.Bytes);
+				    break;
+				case McbeUpdatePlayerGameType p:
+					p.Decode(p.Bytes);
+					var gameType = new McbeSetPlayerGameType();
+					Console.WriteLine(p.GameType);
+					gameType.gamemode = p.GameType/2;
+					OnCallPacket(gameType);
 					break;
 				default:
 					OnPacketReceive(packet);

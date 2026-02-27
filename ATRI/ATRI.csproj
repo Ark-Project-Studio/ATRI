@@ -22,4 +22,8 @@
     <ProjectReference Include="..\Protocol\Protocol\Protocol.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Plugins\" />
+  </ItemGroup>
+
 </Project>

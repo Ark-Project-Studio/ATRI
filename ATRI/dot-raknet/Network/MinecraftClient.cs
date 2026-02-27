@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading.Channels;
+using ATRI.Global;
 using fNbt;
 using Jose;
 using Org.BouncyCastle.Crypto.Agreement;
@@ -43,16 +44,29 @@ namespace ATRI.dot_raknet.Network
 		public ServerSwitcher ServerSwitcher = new ServerSwitcher();
 		public MinecraftClient(RaknetSession session)
 		{
+			
 			Session = session;
 			Session.OnGameSessionReceiveRaw += SessionReceiveRaw;
 			ServerSwitcher.OnPacketReceive += OnPacketReceive;
+			ServerSwitcher.OnCallPacket += pk =>
+			{
+				SendPacket(pk);
+			};
+			GlobalEvent.OnClientRaknetConnected?.Invoke(this);
 		}
-
-
 
 		private void OnPacketReceive(Packet pk)
 		{
-		   SendPacket(pk, true);
+			if (pk is McbeDisconnect)
+			{
+				GlobalEvent.OnClientMCDisConnected?.Invoke(this);
+			}
+			var receive = GlobalEvent.OnServerPacketReceive?.Invoke(ServerSwitcher, pk);
+			if (receive is UnknownPacket)
+			{
+				return;
+			}
+			SendPacket(pk, true);
 		}
 
 		public void SendPacket(List<Packet> packets, bool SendBuf)
@@ -110,7 +124,7 @@ namespace ATRI.dot_raknet.Network
 		}
 		private void HandlePacket(Packet packet)
 		{
-		Logger.info(packet);
+		//Logger.info(packet);
 			switch (packet)
 			{
 				case McbeRequestNetworkSettings s:
@@ -123,7 +137,22 @@ namespace ATRI.dot_raknet.Network
 					break;
 				case McbeClientToServerHandshake p:
 					break;
+			    case McbeText p:
+					var disconnect = new McbeDisconnect();
+					disconnect.message = "114514";
+					disconnect.hideDisconnectReason = false;
+					disconnect.failReason = McbeDisconnect.DisconnectReason.BannedSkin;
+					SendPacket(disconnect);
+					break;
+				case McbeDisconnect p:
+					GlobalEvent.OnClientMCDisConnected?.Invoke(this);
+					break;
 				default:
+					var receive = GlobalEvent.OnClientPacketReceive?.Invoke(this, packet);
+					if (receive is UnknownPacket)
+					{
+						break;
+					}
 					ServerSwitcher.CallPacket(packet);
 					break;
 			}

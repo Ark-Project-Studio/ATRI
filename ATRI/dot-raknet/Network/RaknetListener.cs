@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System;
 using ATRI.dot_raknet.Network;
+using ATRI.Global;
 using Protocol.Network.MinecraftPacket;
 using OpenConnectionReply1 = SharpRakNet.Protocol.Raknet.OpenConnectionReply1;
 using OpenConnectionReply2 = SharpRakNet.Protocol.Raknet.OpenConnectionReply2;
@@ -111,9 +112,15 @@ namespace SharpRakNet.Network
             var session = new RaknetSession(Socket, peer_addr, (ulong)guid, rak_version, new RecvQ(), new SendQ(req.mtu));
             lock (Sessions)
             {
-                Sessions.Add(peer_addr, new MinecraftClient(session));
-                Socket.Send(peer_addr, reply2Buf);
-                SessionConnected(session);
+	            var client = new MinecraftClient(session);
+	            var add = Sessions.TryAdd(peer_addr, client);
+	            if (add)
+	            {
+		            
+					GlobalEvent.OnClientRaknetConnected?.Invoke(client);
+					Socket.Send(peer_addr, reply2Buf);
+					SessionConnected(session);
+				}
             }
         }
 
@@ -132,7 +139,6 @@ namespace SharpRakNet.Network
                     session.Session.SessionDisconnected(session.Session);
                 }
             }
-
             Socket.Stop();
         }
 
